@@ -28,10 +28,23 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">{{ $siswa->penilaian->rata_rata ?? '-' }}</td>
-                                <td class="px-6 py-4 text-sm">
+                                <td class="px-6 py-4 text-sm flex items-center gap-4">
+                                    {{-- Tombol Input/Edit --}}
                                     <a href="{{ route('guru.penilaian.create', $siswa) }}" class="text-indigo-600 hover:text-indigo-900 font-bold">
                                         {{ $siswa->penilaian ? 'Edit Nilai' : 'Input Nilai' }}
                                     </a>
+
+                                    {{-- Tombol Export PDF: Hanya muncul jika data penilaian ada --}}
+                                    @if($siswa->penilaian)
+                                        <a href="{{ route('guru.penilaian.export-pdf', $siswa->penilaian) }}" 
+                                           class="text-red-600 hover:text-red-900 font-bold flex items-center gap-1"
+                                           title="Unduh Lembar Penilaian PDF">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            PDF
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
