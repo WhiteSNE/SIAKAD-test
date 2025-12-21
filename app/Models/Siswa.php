@@ -21,5 +21,5 @@ class Siswa extends Model
     public function dudi() { return $this->belongsTo(Dudi::class); }
     
     public function jurnals() { return $this->hasMany(Jurnal::class); }
-    public function penilaian() { return $this->hasOne(Penilaian::class); }
+    public function penilaian() { return $this->hasOne(Penilaian::class, 'siswa_id'); }
 }

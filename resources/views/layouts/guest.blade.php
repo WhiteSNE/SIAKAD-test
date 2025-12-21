@@ -25,7 +25,7 @@
                 </div>
 
                 {{-- Teks Judul --}}
-                <h1 class="text-2xl font-bold text-gray-800 tracking-tight">SIM PKL</h1>
+                <h1 class="text-2xl font-bold text-gray-800 tracking-tight">SIAKAD PKL</h1>
                 <p class="text-sm text-gray-500 font-medium">SMK NEGERI 4 MADIUN</p>
             </div>
 

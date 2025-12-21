@@ -27,23 +27,63 @@ class GuruDashboardController extends Controller
     /**
      * Menampilkan daftar siswa bimbingan.
      */
-    public function indexSiswa()
-    {
-        $guru = $this->getGuru();
-        $siswas = $guru->siswas()->with(['kelas', 'jurusan', 'dudi'])->get();
-        return view('guru.siswa.index', compact('siswas'));
+
+// app/Http/Controllers/Guru/GuruDashboardController.php
+
+public function indexSiswa(Request $request)
+{
+    $guru = $this->getGuru();
+    $search = $request->input('search');
+
+    // Inisialisasi query dari relasi siswa bimbingan
+    $query = $guru->siswas()->with(['kelas', 'jurusan', 'dudi']);
+
+    // Logika Pencarian: Nama, NISN, Nama Kelas, atau Nama Jurusan
+    if ($search) {
+        $query->where(function($q) use ($search) {
+            $q->where('nama_lengkap', 'like', "%{$search}%")
+              ->orWhere('nisn', 'like', "%{$search}%")
+              ->orWhereHas('kelas', function($q) use ($search) {
+                  $q->where('nama_kelas', 'like', "%{$search}%");
+              })
+              ->orWhereHas('jurusan', function($q) use ($search) {
+                  $q->where('nama_jurusan', 'like', "%{$search}%");
+              });
+        });
     }
+
+    // Logika Sorting
+    $allowedSortColumns = ['nama_lengkap', 'nisn'];
+    $sort = in_array($request->sort, $allowedSortColumns) ? $request->sort : 'nama_lengkap';
+    $direction = $request->direction === 'desc' ? 'desc' : 'asc';
+
+    $siswas = $query->orderBy($sort, $direction)->get();
+
+    return view('guru.siswa.index', compact('siswas'));
+}
 
     /**
      * Menampilkan daftar jurnal siswa bimbingan untuk divalidasi.
      */
-    public function indexJurnal()
-    {
-        $guru = $this->getGuru();
-        $siswaIds = $guru->siswas->pluck('id');
-        $jurnals = Jurnal::whereIn('siswa_id', $siswaIds)->with('siswa')->orderBy('tanggal', 'desc')->get();
-        return view('guru.jurnal.index', compact('jurnals'));
+    public function indexJurnal(Request $request)
+{
+    $guru = $this->getGuru(); //
+    $siswas = $guru->siswas; // Ambil daftar siswa bimbingan untuk filter
+    
+    $query = Jurnal::whereIn('siswa_id', $siswas->pluck('id'))
+        ->with('siswa')
+        ->orderBy('tanggal', 'desc');
+
+    // Fitur Filter Siswa
+    if ($request->has('siswa_id') && $request->siswa_id != '') {
+        $query->where('siswa_id', $request->siswa_id);
     }
+
+    // Paginasi agar performa tetap ringan
+    $jurnals = $query->paginate(15)->withQueryString();
+
+    return view('guru.jurnal.index', compact('jurnals', 'siswas'));
+}
 
     /**
      * Validasi atau revisi jurnal harian siswa.
@@ -58,16 +98,59 @@ class GuruDashboardController extends Controller
         return back()->with('success', 'Status jurnal berhasil diperbarui');
     }
 
+    public function bulkValidasiJurnal(Request $request)
+{
+    $request->validate([
+        'jurnal_ids' => 'required|array',
+        'jurnal_ids.*' => 'exists:jurnals,id',
+        'status' => 'required|in:disetujui,revisi,pending',
+        'bulk_catatan' => 'nullable|string',
+    ]);
+
+    // Update data secara massal untuk efisiensi
+    Jurnal::whereIn('id', $request->jurnal_ids)->update([
+        'status' => $request->status,
+        'catatan_pembimbing' => $request->bulk_catatan,
+    ]);
+
+    return back()->with('success', count($request->jurnal_ids) . ' jurnal berhasil diperbarui secara massal.');
+}
+
     /**
      * Menampilkan daftar status penilaian seluruh siswa bimbingan.
      */
-    public function indexPenilaian()
-    {
-        $guru = $this->getGuru();
-        // Menggunakan relasi penilaian sesuai model Siswa
-        $siswas = Siswa::where('guru_id', $guru->id)->with('penilaian')->latest()->get();
-        return view('guru.penilaian.index', compact('siswas'));
+    public function indexPenilaian(Request $request)
+{
+    $guru = $this->getGuru();
+    $search = $request->input('search');
+
+    // Inisialisasi Query
+    $query = Siswa::where('guru_id', $guru->id)->with(['penilaian', 'kelas', 'jurusan']);
+
+    // Fitur Pencarian (Nama, NISN, Kelas, Jurusan)
+    if ($search) {
+        $query->where(function($q) use ($search) {
+            $q->where('nama_lengkap', 'like', "%{$search}%")
+              ->orWhere('nisn', 'like', "%{$search}%")
+              ->orWhereHas('kelas', function($q) use ($search) {
+                  $q->where('nama_kelas', 'like', "%{$search}%");
+              })
+              ->orWhereHas('jurusan', function($q) use ($search) {
+                  $q->where('nama_jurusan', 'like', "%{$search}%");
+              });
+        });
     }
+
+    // Fitur Sorting (Nama & NISN)
+    $allowedSort = ['nama_lengkap', 'nisn'];
+    $sort = in_array($request->sort, $allowedSort) ? $request->sort : 'nama_lengkap';
+    $direction = $request->direction === 'desc' ? 'desc' : 'asc';
+
+    // Pagination: 15 data per halaman
+    $siswas = $query->orderBy($sort, $direction)->paginate(15)->withQueryString();
+
+    return view('guru.penilaian.index', compact('siswas'));
+}
 
     /**
      * Form input penilaian baru untuk siswa tertentu.
@@ -96,7 +179,7 @@ class GuruDashboardController extends Controller
     public function storePenilaian(Request $request, Siswa $siswa)
     {
         $guru = $this->getGuru();
-        
+
         $validated = $request->validate([
             'lama_pkl' => 'required|string|max:255',
             'capaian' => 'required|array|min:4',
@@ -183,14 +266,16 @@ class GuruDashboardController extends Controller
      */
     public function exportPdf(Penilaian $penilaian)
     {
+        // REVISI: Samakan nama helper dengan yang didefinisikan di atas
         $guru = $this->getGuru();
+
+        // Pastikan guru pembimbingnya sesuai
         if ($penilaian->guru_id !== $guru->id) {
-            abort(403);
+            abort(403, 'Anda bukan pembimbing untuk penilaian ini.');
         }
 
-        // Load relasi untuk kelengkapan data dokumen
         $penilaian->load(['siswa.dudi', 'guru']);
-        
+
         $pdf = Pdf::loadView('guru.penilaian.export-pdf', [
             'penilaian' => $penilaian,
             'siswa' => $penilaian->siswa,

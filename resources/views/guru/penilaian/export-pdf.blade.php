@@ -30,7 +30,7 @@
             <tr style="background-color: #D9D9D9;">
                 <th width="5%">NO</th>
                 <th width="45%">CAPAIAN PEMBELAJARAN</th>
-                <th width="25%">KETERcapaian YA/TIDAK</th>
+                <th width="25%">KETERCAPAIAN YA/TIDAK</th>
                 <th width="25%">DESKRIPSI</th>
             </tr>
         </thead>

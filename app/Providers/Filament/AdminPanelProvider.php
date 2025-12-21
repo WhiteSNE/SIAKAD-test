@@ -17,16 +17,30 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Http\Responses\Auth\Contracts\LogoutResponse;
 
 class AdminPanelProvider extends PanelProvider
 {
+    public function register(): void
+    {
+        parent::register();
+
+        // Mengarahkan logout langsung ke /login
+        $this->app->bind(LogoutResponse::class, function () {
+            return new class implements LogoutResponse {
+                public function toResponse($request): \Illuminate\Http\RedirectResponse
+                {
+                    return redirect()->to('/login');
+                }
+            };
+        });
+    }
     public function panel(Panel $panel): Panel
     {
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -55,4 +69,5 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ]);
     }
+    
 }
