@@ -43,7 +43,7 @@ class DudiResource extends Resource
     ->actions([
             // Menambahkan Edit dan Delete pada setiap baris data
             Tables\Actions\EditAction::make(),
-            Tables\Actions\DeleteAction::make(), // Tambahkan ini
+            Tables\Actions\DeleteAction::make(),
         ])
         ->bulkActions([
             Tables\Actions\BulkActionGroup::make([

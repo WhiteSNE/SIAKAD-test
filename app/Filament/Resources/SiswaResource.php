@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\SiswaResource\Pages;
 use App\Filament\Resources\SiswaResource\RelationManagers;
 use App\Models\Siswa;
+use App\Models\Guru;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -56,6 +57,7 @@ class SiswaResource extends Resource
         Tables\Columns\TextColumn::make('nisn')->label('NISN')->searchable(),
         Tables\Columns\TextColumn::make('jurusan.nama_jurusan')->badge(),
         Tables\Columns\TextColumn::make('kelas.nama_kelas'),
+        Tables\Columns\TextColumn::make('guru.NAMA')->label('pembimbing')->placeholder('Belum ada'),
         Tables\Columns\TextColumn::make('dudi.nama_perusahaan')->label('Tempat PKL')->placeholder('Belum ada'),
     ])
     ->actions([
