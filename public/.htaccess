@@ -18,4 +18,25 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+
+    # ========== BLOCK SENSITIVE FILES ==========
+<FilesMatch "(^\.env|\.git|\.log|composer\.(json|lock)|artisan|server\.php|webpack\.mix\.js|package\.json|phpunit\.xml)">
+    Require all denied
+</FilesMatch>
+
+# ========== BLOCK STORAGE / VENDOR ==========
+RewriteRule ^storage/ - [F,L]
+RewriteRule ^vendor/ - [F,L]
+
+# ========== SECURITY HEADERS ==========
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+</IfModule>
+
+# ========== HIDE SERVER SIGNATURE ==========
+ServerSignature Off
+
 </IfModule>
