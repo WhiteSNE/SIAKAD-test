@@ -19,5 +19,7 @@ class Dudi extends Model
     ];
 
     // Dudi menampung banyak siswa PKL
-    public function siswas() { return $this->hasMany(Siswa::class); }
+    public function siswas() { 
+        return $this->hasMany(Siswa::class);
+    }
 }

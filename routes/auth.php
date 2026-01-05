@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
-
+    Route::post('password/otp', [PasswordController::class, 'sendOtp'])->name('password.otp');
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
@@ -53,6 +53,16 @@ Route::middleware('auth')->group(function () {
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+
+    // Gunakan throttle:otp-send untuk membatasi pengiriman email
+    Route::post('password/otp', [PasswordController::class, 'sendOtp'])
+        ->middleware('throttle:otp-send')
+        ->name('password.otp');
+
+    // Gunakan throttle:otp-verify untuk membatasi percobaan update password
+    Route::put('password', [PasswordController::class, 'update'])
+        ->middleware('throttle:otp-verify')
+        ->name('password.update');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');

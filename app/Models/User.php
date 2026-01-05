@@ -17,7 +17,9 @@ class User extends Authenticatable implements FilamentUser
         'username',
         'email',
         'password',
-        'role', // admin, guru, siswa
+        'role',
+        'otp_code',
+        'otp_expires_at',
     ];
 
     protected $hidden = [

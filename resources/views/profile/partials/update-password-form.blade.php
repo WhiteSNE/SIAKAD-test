@@ -9,9 +9,30 @@
         </p>
     </header>
 
+    <form method="post" action="{{ route('password.otp') }}" class="mt-6">
+        @csrf
+        <div class="flex items-center gap-4">
+            <x-primary-button type="submit">
+                {{ __('Kirim Kode OTP ke Email') }}
+            </x-primary-button>
+
+            @if (session('status') === 'otp-sent')
+                <p class="text-sm text-green-600 font-medium">
+                    {{ __('Kode OTP telah dikirim ke email Anda.') }}
+                </p>
+            @endif
+        </div>
+    </form>
+
     <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-6">
         @csrf
         @method('put')
+
+        <div>
+            <x-input-label for="otp" value="Kode OTP" />
+            <x-text-input id="otp" name="otp" type="text" class="mt-1 block w-full" placeholder="Masukkan 6 digit kode dari email" required />
+            <x-input-error :messages="$errors->updatePassword->get('otp')" class="mt-2" />
+        </div>
 
         <div>
             <x-input-label for="update_password_current_password" :value="__('Current Password')" />
